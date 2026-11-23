@@ -511,32 +511,46 @@ window.addEventListener("keydown",e=>{
 
 // ANIMATION
 
+
+// SLOW CONTINUOUS 3D SPIDER WEB ROTATION
+
+let autoRotate = true;
+
+const rotationSpeed = 0.00035;
+
+let rx = 0;
+let ry = 0;
+
+let targetX = 0;
+let targetY = 0;
+
 function animate(){
 
   requestAnimationFrame(animate);
 
-  universe.rotation.y+=(targetY-universe.rotation.y)*0.05;
-  universe.rotation.x+=(targetX-universe.rotation.x)*0.05;
-
-  if(!dragging){
-
-    universe.rotation.y+=0.0007;
-
+  // Slowly rotate the entire spider web
+  if(autoRotate && !dragging){
+    targetY += rotationSpeed;
   }
 
-  // Keep media facing the camera
+  // Smooth movement
+  rx += (targetX-rx)*0.025;
+  ry += (targetY-ry)*0.025;
 
+  // Apply 3D rotation
+  group.rotation.x = rx;
+  group.rotation.y = ry;
+
+  // Keep photographs facing the camera
   cards.forEach(card=>{
     card.lookAt(camera.position);
   });
 
-  stars.rotation.y+=0.0001;
-
   renderer.render(scene,camera);
-
 }
 
 animate();
+
 
 // RESPONSIVE
 
