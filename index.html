@@ -1,45 +1,557 @@
+
 <!DOCTYPE html>
-<!--
-  Author: YOUR NAME
-  GU username: YOUR-GU-USERNAME
-  Course: BMIS 235 - HTML-1
--->
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="author" content="YOUR NAME">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D Digital Web</title>
 
-    <!-- this is the title that shows up on the browser tab -->
-    <title>Hello World</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
 
-    <style>
-        /* change these colors */
-        body {
-            background-color: #0b1d3a;
-            color: #f2f2f2;
-        }
-    </style>
+body {
+  background:#02050a;
+  color:white;
+  overflow:hidden;
+  font-family:Arial,sans-serif;
+}
+
+#scene {
+  position:fixed;
+  inset:0;
+  z-index:1;
+}
+
+header {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  padding:28px 5%;
+  display:flex;
+  justify-content:space-between;
+  z-index:5;
+  pointer-events:none;
+}
+
+.logo {
+  letter-spacing:5px;
+  font-size:17px;
+  font-weight:bold;
+}
+
+nav {
+  pointer-events:auto;
+}
+
+nav a {
+  color:#8ca5b5;
+  text-decoration:none;
+  font-size:11px;
+  letter-spacing:3px;
+  margin-left:25px;
+}
+
+nav a:hover { color:#00eaff; }
+
+.center {
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  z-index:2;
+  text-align:center;
+  pointer-events:none;
+  width:100%;
+}
+
+.center h1 {
+  font-size:clamp(35px,7vw,85px);
+  letter-spacing:12px;
+  text-shadow:0 0 30px #00cfff77;
+}
+
+.center p {
+  color:#83a9bb;
+  font-size:10px;
+  letter-spacing:6px;
+  margin-top:15px;
+}
+
+.hint {
+  position:absolute;
+  bottom:30px;
+  width:100%;
+  text-align:center;
+  z-index:3;
+  color:#587889;
+  font-size:10px;
+  letter-spacing:3px;
+  pointer-events:none;
+}
+
+#viewer {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#000e;
+  z-index:10;
+  justify-content:center;
+  align-items:center;
+}
+
+#viewer.active { display:flex; }
+
+#viewer img, #viewer video {
+  max-width:90%;
+  max-height:85%;
+  border-radius:12px;
+  box-shadow:0 0 50px #00dfff55;
+}
+
+#close {
+  position:absolute;
+  right:30px;
+  top:20px;
+  font-size:40px;
+  color:white;
+  cursor:pointer;
+}
+
+@media(max-width:600px) {
+  header { padding:20px 5%; }
+  .logo { font-size:12px; }
+  nav a { font-size:9px; margin-left:10px; }
+  .center h1 { letter-spacing:5px; }
+}
+</style>
 </head>
+
 <body>
-    <h1>Hello World!</h1>
-    <h2>A page about our home planet</h2>
 
-    <p>Earth is the <strong>third planet from the Sun</strong> and the only place we know of with life. From space it looks mostly blue, because water covers about 71% of its surface.</p>
+<header>
+  <div class="logo">WEB / UNIVERSE</div>
+  <nav>
+    <a href="#">HOME</a>
+    <a href="#">ABOUT</a>
+    <a href="#">CONTACT</a>
+  </nav>
+</header>
 
-    <!-- Image: the file name here must match the file in the folder exactly -->
-    <img src="earth.jpg" alt="NASA photo of Earth from space, showing blue oceans, white clouds and brown land" width="400">
+<div class="center">
+  <h1>CONNECTED</h1>
+  <p>EXPLORE THE DIGITAL UNIVERSE</p>
+</div>
 
-    <p>Earth is about <em>4.5 billion years old</em>. It spins once a day, circles the Sun once a year, and carries about 8 billion people along for the ride.</p>
+<div class="hint">
+  DRAG TO ROTATE • SCROLL TO EXPLORE • CLICK TO DISCOVER
+</div>
 
-    <h2>Three facts about Earth</h2>
-    <ul>
-        <li>One trip around the Sun takes 365.25 days. That extra quarter day is why we have leap years.</li>
-        <li>The deepest known point in the ocean is about 11 kilometers down.</li>
-        <li>The Moon drifts away from Earth about 4 centimeters every year.</li>
-    </ul>
+<div id="scene"></div>
 
-    <!-- Footer: fill in your name -->
-    <p>Built by YOUR NAME &middot; BMIS 235</p>
+<div id="viewer">
+  <span id="close">&times;</span>
+  <div id="viewerContent"></div>
+</div>
+
+<script type="module">
+
+import * as THREE from
+'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+// SCENE
+
+const container = document.getElementById("scene");
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x02050a);
+
+const camera = new THREE.PerspectiveCamera(
+  55,
+  window.innerWidth/window.innerHeight,
+  0.1,
+  1000
+);
+
+camera.position.z = 14;
+
+const renderer = new THREE.WebGLRenderer({
+  antialias:true
+});
+
+renderer.setPixelRatio(
+  Math.min(window.devicePixelRatio,2)
+);
+
+renderer.setSize(
+  window.innerWidth,
+  window.innerHeight
+);
+
+container.appendChild(renderer.domElement);
+
+// LIGHTING
+
+scene.add(new THREE.AmbientLight(0xffffff,1.5));
+
+const light = new THREE.PointLight(0x00cfff,30,40);
+light.position.set(0,5,8);
+scene.add(light);
+
+// MAIN WEB GROUP
+
+const universe = new THREE.Group();
+scene.add(universe);
+
+// WEB POINTS
+
+const points = [];
+const radius = 6.3;
+const count = 110;
+
+// Fibonacci sphere distribution
+
+for(let i=0;i<count;i++){
+
+  const y = 1-(i/(count-1))*2;
+  const r = Math.sqrt(1-y*y);
+  const angle = Math.PI*(3-Math.sqrt(5))*i;
+
+  const point = new THREE.Vector3(
+    Math.cos(angle)*r*radius,
+    y*radius,
+    Math.sin(angle)*r*radius
+  );
+
+  points.push(point);
+
+  const dot = new THREE.Mesh(
+    new THREE.SphereGeometry(0.025,8,8),
+    new THREE.MeshBasicMaterial({
+      color:0x00dfff
+    })
+  );
+
+  dot.position.copy(point);
+  universe.add(dot);
+}
+
+// CONNECT THE SPIDER WEB
+
+const positions = [];
+
+points.forEach((point,i)=>{
+
+  const nearby = points
+    .map((other,j)=>({
+      point:other,
+      index:j,
+      distance:point.distanceTo(other)
+    }))
+    .filter(item=>item.index!==i)
+    .sort((a,b)=>a.distance-b.distance)
+    .slice(0,3);
+
+  nearby.forEach(item=>{
+
+    if(item.index>i){
+
+      positions.push(
+        point.x,point.y,point.z,
+        item.point.x,item.point.y,item.point.z
+      );
+
+    }
+
+  });
+
+});
+
+const webGeometry = new THREE.BufferGeometry();
+
+webGeometry.setAttribute(
+  "position",
+  new THREE.Float32BufferAttribute(positions,3)
+);
+
+const webMaterial = new THREE.LineBasicMaterial({
+  color:0x00bde9,
+  transparent:true,
+  opacity:0.32
+});
+
+const web = new THREE.LineSegments(
+  webGeometry,
+  webMaterial
+);
+
+universe.add(web);
+
+// FLOATING MEDIA
+
+const media = [
+
+  {
+    image:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=700",
+    type:"image"
+  },
+
+  {
+    image:"https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=700",
+    type:"image"
+  },
+
+  {
+    image:"https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=700",
+    type:"image"
+  },
+
+  {
+    image:"https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=700",
+    type:"image"
+  },
+
+  {
+    image:"https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=700",
+    type:"video",
+    video:"https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+  },
+
+  {
+    image:"https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=700",
+    type:"image"
+  },
+
+  {
+    image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=700",
+    type:"image"
+  },
+
+  {
+    image:"https://images.unsplash.com/photo-1511497584788-876760111969?w=700",
+    type:"image"
+  }
+
+];
+
+const loader = new THREE.TextureLoader();
+const cards = [];
+
+media.forEach((item,i)=>{
+
+  const texture = loader.load(item.image);
+
+  const material = new THREE.MeshBasicMaterial({
+    map:texture,
+    side:THREE.DoubleSide
+  });
+
+  const geometry = new THREE.PlaneGeometry(1.65,1.15);
+
+  const card = new THREE.Mesh(geometry,material);
+
+  // Spread media around the 3D sphere
+
+  const y = 1-(i/(media.length-1))*2;
+  const r = Math.sqrt(1-y*y);
+  const angle = i*Math.PI*(3-Math.sqrt(5));
+
+  card.position.set(
+    Math.cos(angle)*r*5.3,
+    y*5.3,
+    Math.sin(angle)*r*5.3
+  );
+
+  card.userData = item;
+
+  universe.add(card);
+  cards.push(card);
+
+});
+
+// STAR FIELD
+
+const starGeometry = new THREE.BufferGeometry();
+const starPositions = [];
+
+for(let i=0;i<800;i++){
+
+  starPositions.push(
+    (Math.random()-.5)*50,
+    (Math.random()-.5)*50,
+    (Math.random()-.5)*50
+  );
+
+}
+
+starGeometry.setAttribute(
+  "position",
+  new THREE.Float32BufferAttribute(starPositions,3)
+);
+
+const stars = new THREE.Points(
+  starGeometry,
+  new THREE.PointsMaterial({
+    color:0x7bcfff,
+    size:0.025,
+    transparent:true,
+    opacity:0.7
+  })
+);
+
+scene.add(stars);
+
+// MOUSE MOVEMENT
+
+let mouseX=0;
+let mouseY=0;
+
+let targetX=0;
+let targetY=0;
+
+let dragging=false;
+let previousX=0;
+let previousY=0;
+
+renderer.domElement.addEventListener("pointerdown",e=>{
+  dragging=true;
+  previousX=e.clientX;
+  previousY=e.clientY;
+});
+
+window.addEventListener("pointerup",()=>{
+  dragging=false;
+});
+
+window.addEventListener("pointermove",e=>{
+
+  if(dragging){
+
+    targetY+=(e.clientX-previousX)*0.004;
+    targetX+=(e.clientY-previousY)*0.004;
+
+    previousX=e.clientX;
+    previousY=e.clientY;
+
+  } else {
+
+    mouseX=(e.clientX/window.innerWidth-.5)*0.5;
+    mouseY=(e.clientY/window.innerHeight-.5)*0.5;
+
+  }
+
+});
+
+window.addEventListener("wheel",e=>{
+  camera.position.z=Math.max(
+    9,
+    Math.min(22,camera.position.z+e.deltaY*0.008)
+  );
+},{passive:true});
+
+// CLICK MEDIA
+
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+
+const viewer = document.getElementById("viewer");
+const viewerContent = document.getElementById("viewerContent");
+
+renderer.domElement.addEventListener("click",e=>{
+
+  if(dragging) return;
+
+  pointer.x=(e.clientX/window.innerWidth)*2-1;
+  pointer.y=-(e.clientY/window.innerHeight)*2+1;
+
+  raycaster.setFromCamera(pointer,camera);
+
+  const hits=raycaster.intersectObjects(cards);
+
+  if(hits.length){
+
+    const item=hits[0].object.userData;
+
+    if(item.type==="video"){
+
+      viewerContent.innerHTML=
+      `<video src="${item.video}" controls autoplay playsinline></video>`;
+
+    } else {
+
+      viewerContent.innerHTML=
+      `<img src="${item.image}" alt="Expanded photograph">`;
+
+    }
+
+    viewer.classList.add("active");
+
+  }
+
+});
+
+// CLOSE VIEWER
+
+function closeViewer(){
+
+  viewer.classList.remove("active");
+  viewerContent.innerHTML="";
+
+}
+
+document.getElementById("close").onclick=closeViewer;
+
+viewer.addEventListener("click",e=>{
+  if(e.target===viewer) closeViewer();
+});
+
+window.addEventListener("keydown",e=>{
+  if(e.key==="Escape") closeViewer();
+});
+
+// ANIMATION
+
+function animate(){
+
+  requestAnimationFrame(animate);
+
+  universe.rotation.y+=(targetY-universe.rotation.y)*0.05;
+  universe.rotation.x+=(targetX-universe.rotation.x)*0.05;
+
+  if(!dragging){
+
+    universe.rotation.y+=0.0007;
+
+  }
+
+  // Keep media facing the camera
+
+  cards.forEach(card=>{
+    card.lookAt(camera.position);
+  });
+
+  stars.rotation.y+=0.0001;
+
+  renderer.render(scene,camera);
+
+}
+
+animate();
+
+// RESPONSIVE
+
+window.addEventListener("resize",()=>{
+
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+});
+
+</script>
 </body>
 </html>
